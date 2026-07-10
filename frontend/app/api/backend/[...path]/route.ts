@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { API_BASE } from "@/lib/api";
 
-// Proxy del lado del servidor para las llamadas interactivas del cliente
-// (p.ej. filtros del explorador). Reenvía a la API HTTP sin exponerla al navegador.
 export async function GET(
   req: NextRequest,
   { params }: { params: { path: string[] } }

@@ -1,21 +1,26 @@
 import {
-  getDashboard, getFrecuencias, getLags, getMatriz, getArticulos,
+  getDashboard, getFrecuencias, getLags, getArticulos,
 } from "@/lib/api";
+import {
+  cleanContaminantes, cleanPaises, cleanMetodos, cleanSoftware, cleanLags,
+} from "@/lib/clean";
 import Hero from "@/components/Hero";
 import Section from "@/components/Section";
 import StatCards from "@/components/StatCards";
 import BarPanel from "@/components/BarPanel";
-import MatrixHeatmap from "@/components/MatrixHeatmap";
 import ArticleExplorer from "@/components/ArticleExplorer";
 
 export const dynamic = "force-dynamic";
 
+function ChartLabel({ children }: { children: React.ReactNode }) {
+  return <p className="mb-2 font-mono text-[11px] text-faint uppercase tracking-wider">{children}</p>;
+}
+
 export default async function Page() {
-  const [dash, contaminantes, metodos, software, lags, paises, matriz, articulos] =
+  const [dash, contamRaw, metodosRaw, softwareRaw, lagsRaw, paisesRaw, articulos] =
     await Promise.all([
       getDashboard(), getFrecuencias("contaminantes"), getFrecuencias("metodos"),
-      getFrecuencias("software"), getLags(), getFrecuencias("paises"),
-      getMatriz(), getArticulos(),
+      getFrecuencias("software"), getLags(), getFrecuencias("paises"), getArticulos(),
     ]);
 
   if (!dash) {
@@ -24,59 +29,78 @@ export default async function Page() {
         <p className="font-mono text-xs tracking-widest text-ember uppercase">Sin conexión con la API</p>
         <h1 className="mt-3 font-display text-2xl font-semibold">El panel no pudo cargar los datos</h1>
         <p className="mt-3 text-sm text-muted">
-          Revisa que la variable <span className="font-mono text-ink">API_BASE_URL</span> apunte al ALB
-          vigente y que el despliegue en AWS esté activo.
+          Revisa que <span className="font-mono text-ink">API_BASE_URL</span> apunte al ALB vigente
+          y que el despliegue en AWS esté activo.
         </p>
       </main>
     );
   }
 
-  const nPaises = paises ? Object.keys(paises).length : Object.keys(matriz ?? {}).length;
+  const contaminantes = cleanContaminantes(contamRaw);
+  const metodos = cleanMetodos(metodosRaw);
+  const software = cleanSoftware(softwareRaw);
+  const lags = cleanLags(lagsRaw);
+  const paises = cleanPaises(paisesRaw);
+  const nPaises = Object.keys(paises).length;
 
   return (
     <main>
       <Hero total={dash.total_articulos} paises={nPaises} />
 
-      <Section eyebrow="Panorama" title="Avance por cadena de búsqueda"
-        note="Cada cadena responde una pregunta de revisión distinta (P1/P2/P3).">
+      <Section eyebrow="Panorama" title="Las tres preguntas de la revisión"
+        note="Cada cadena de búsqueda (P1/P2/P3) responde una pregunta. Aquí, el avance de extracción de cada una.">
         <StatCards dash={dash} />
       </Section>
 
-      <Section eyebrow="Exposición" title="Contaminantes y métodos de modelamiento"
-        note="Frecuencia con que cada término aparece en el corpus, coloreado según intensidad.">
+      <Section eyebrow="P1 · Cómo se estudia" title="Métodos, herramientas y software"
+        note="Diseños de análisis espacio-temporal y el software que los soporta.">
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <div>
-            <p className="mb-2 font-mono text-[11px] text-faint uppercase tracking-wider">Contaminantes</p>
-            <BarPanel data={contaminantes ?? {}} />
+            <ChartLabel>Software y librerías</ChartLabel>
+            <BarPanel data={software} />
           </div>
-          <div>
-            <p className="mb-2 font-mono text-[11px] text-faint uppercase tracking-wider">Métodos de modelamiento</p>
-            <BarPanel data={metodos ?? {}} />
+          <div className="panel flex flex-col justify-center p-6">
+            <p className="font-mono text-xs text-aqi1">P1</p>
+            <p className="mt-3 text-sm leading-relaxed text-muted">
+              Esta cadena indaga <span className="text-ink">cómo se estudia</span> la relación entre incendios,
+              calidad del aire y salud respiratoria: los diseños de análisis espacial y temporal, y las
+              herramientas de software que los hacen posibles. El gráfico resume el software más frecuente;
+              los diseños específicos quedan registrados en la extracción de cada artículo.
+            </p>
           </div>
         </div>
       </Section>
 
-      <Section eyebrow="Herramientas y tiempo" title="Software y estructura de rezagos"
-        note="El rezago exposición→efecto es el corazón metodológico de OE2.">
+      <Section eyebrow="P2 · Con qué datos y dónde" title="Fuentes, contaminantes y cobertura geográfica"
+        note="Qué contaminantes se miden y en qué regiones se concentra la evidencia.">
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <div>
-            <p className="mb-2 font-mono text-[11px] text-faint uppercase tracking-wider">Software</p>
-            <BarPanel data={software ?? {}} unit="artículos" />
+            <ChartLabel>Contaminantes medidos</ChartLabel>
+            <BarPanel data={contaminantes} />
           </div>
           <div>
-            <p className="mb-2 font-mono text-[11px] text-faint uppercase tracking-wider">Ventanas de rezago (lag)</p>
-            <BarPanel data={lags ?? {}} unit="artículos" />
+            <ChartLabel>Distribución por país / región</ChartLabel>
+            <BarPanel data={paises} top={15} />
           </div>
         </div>
       </Section>
 
-      <Section eyebrow="El vacío geográfico" title="Matriz país × topografía"
-        note="Cada celda cuenta artículos. El corredor andino peruano aparece vacío: ese es el aporte.">
-        <MatrixHeatmap matriz={matriz ?? {}} />
+      <Section eyebrow="P3 · Cómo se modela y predice" title="Modelamiento y estructura de rezagos"
+        note="Métodos de modelamiento aplicados y las ventanas de rezago exposición-efecto que reportan.">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <div>
+            <ChartLabel>Métodos de modelamiento</ChartLabel>
+            <BarPanel data={metodos} />
+          </div>
+          <div>
+            <ChartLabel>Ventanas de rezago (lag)</ChartLabel>
+            <BarPanel data={lags} />
+          </div>
+        </div>
       </Section>
 
-      <Section eyebrow="Corpus" title="Explorar los artículos"
-        note="Búsqueda libre o filtro por cadena, en vivo contra la API.">
+      <Section eyebrow="Gestor" title="Buscar y abrir artículos"
+        note="Búsqueda en título y resumen contra la API, con enlace directo al DOI.">
         <ArticleExplorer initial={articulos ?? []} />
       </Section>
 
