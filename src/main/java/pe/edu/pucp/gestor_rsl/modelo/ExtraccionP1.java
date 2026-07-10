@@ -1,6 +1,7 @@
 package pe.edu.pucp.gestor_rsl.modelo;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
         import lombok.Getter;
 import lombok.Setter;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +17,7 @@ public class ExtraccionP1 {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "idArticulo", nullable = false)
+    @JsonIgnore
     private Articulo articulo;
 
     @Column(name = "analisis_espacial", columnDefinition = "TEXT")
