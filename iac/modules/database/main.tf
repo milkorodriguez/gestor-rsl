@@ -9,9 +9,27 @@ data "aws_subnets" "sub_redes_por_defecto" {
   }
 }
 
-data "aws_security_group" "grupo_seguridad_por_defecto" {
-  name   = "default"
-  vpc_id = data.aws_vpc.vpc_por_defecto.id
+# Security group propio de la RDS: abre el 3306 (equivale a la regla
+# de entrada que el profesor agrega a mano en la consola).
+resource "aws_security_group" "rds_sg" {
+  name        = "${var.nombre_instancia_rds}-rds-sg"
+  description = "Permite acceso MySQL (3306) a la RDS de gestor-rsl"
+  vpc_id      = data.aws_vpc.vpc_por_defecto.id
+
+  ingress {
+    description = "MySQL/Aurora"
+    from_port   = 3306
+    to_port     = 3306
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 }
 
 resource "aws_db_subnet_group" "rds_subnet_group" {
@@ -30,7 +48,7 @@ resource "aws_db_instance" "gestor_rsl_mysql" {
   username                = var.usuario_base_datos
   password                = var.contrasenha_base_datos
   db_subnet_group_name    = aws_db_subnet_group.rds_subnet_group.name
-  vpc_security_group_ids  = [data.aws_security_group.grupo_seguridad_por_defecto.id]
+  vpc_security_group_ids  = [aws_security_group.rds_sg.id]
   publicly_accessible     = var.rds_publicly_accessible
   skip_final_snapshot     = true
   deletion_protection     = false
