@@ -44,4 +44,18 @@ public interface ArticuloRepository extends JpaRepository<Articulo, Integer> {
     @Query("SELECT a FROM Articulo a JOIN a.extraccionP3 p3 " +
             "WHERE p3.sistemaAlerta = :alerta")
     List<Articulo> findBySistemaAlerta(@Param("alerta") ExtraccionP3.SiNo alerta);
+
+    @Query("SELECT DISTINCT a FROM Articulo a " +
+            "LEFT JOIN a.extraccionP1 p1 LEFT JOIN a.extraccionP2 p2 LEFT JOIN a.extraccionP3 p3 " +
+            "WHERE LOWER(a.titulo) LIKE LOWER(CONCAT('%', :q, '%')) " +
+            "OR LOWER(a.resumen) LIKE LOWER(CONCAT('%', :q, '%')) " +
+            "OR LOWER(a.autores) LIKE LOWER(CONCAT('%', :q, '%')) " +
+            "OR LOWER(p1.software) LIKE LOWER(CONCAT('%', :q, '%')) " +
+            "OR LOWER(p1.analisisEspacial) LIKE LOWER(CONCAT('%', :q, '%')) " +
+            "OR LOWER(p1.analisisTemporal) LIKE LOWER(CONCAT('%', :q, '%')) " +
+            "OR LOWER(p2.contaminantes) LIKE LOWER(CONCAT('%', :q, '%')) " +
+            "OR LOWER(p2.paisRegion) LIKE LOWER(CONCAT('%', :q, '%')) " +
+            "OR LOWER(p3.metodoModelamiento) LIKE LOWER(CONCAT('%', :q, '%')) " +
+            "OR LOWER(p3.resultadoPrincipal) LIKE LOWER(CONCAT('%', :q, '%'))")
+    List<Articulo> buscarAmplio(@Param("q") String q);
 }

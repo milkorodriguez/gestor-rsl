@@ -74,7 +74,7 @@ public class ArticuloService {
     }
 
     public List<Articulo> buscarLibre(String q) {
-        return articuloRepository.findByTituloContainingIgnoreCaseOrResumenContainingIgnoreCase(q, q);
+        return articuloRepository.buscarAmplio(q);
     }
 
     public List<Articulo> buscarPorPais(String pais) {
