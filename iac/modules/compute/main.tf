@@ -114,7 +114,7 @@ resource "aws_lb_target_group" "tg_gestor_rsl" {
   target_type = "ip"
 
   health_check {
-    path                = "/actuator/health"
+    path                = "/api/dashboard"
     interval            = 30
     timeout             = 5
     healthy_threshold   = 2
