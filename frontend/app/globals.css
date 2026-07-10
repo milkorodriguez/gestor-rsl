@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { color-scheme: dark; }
+
+html, body { background: #0c1119; color: #eef1f7; }
+
+body {
+  font-family: var(--font-body), system-ui, sans-serif;
+  background-image:
+    radial-gradient(1100px 480px at 78% -8%, rgba(249,122,60,0.12), transparent 60%),
+    radial-gradient(900px 520px at 8% 0%, rgba(56,189,248,0.10), transparent 55%);
+  background-attachment: fixed;
+}
+
+::selection { background: rgba(249,122,60,0.28); }
+
+.panel {
+  background: linear-gradient(180deg, #121b2b 0%, #0f1826 100%);
+  border: 1px solid #22304a;
+  border-radius: 16px;
+}
+.hairline { border-color: #22304a; }
+
+/* barra de escaneo sutil en el hero */
+@keyframes drift { from { transform: translateX(-20%); } to { transform: translateX(120%); } }
+.scanline { animation: drift 9s linear infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .scanline { animation: none; }
+}
